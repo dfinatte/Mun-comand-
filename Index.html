@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mesário SMUN v4.0 - FUNCIONA!</title>
+  <style>
+    :root {
+      --bg: #f8f9fa;
+      --card: #ffffff;
+      --text: #2c3e50;
+      --accent: #c9a227;
+      --danger: #e74c3c;
+      --success: #27ae60;
+      --warning: #f39c12;
+      --gold: #c9a227;
+      --light: #f0f4f8;
+    }
+    .dark {
+      --bg: #1a1a1a;
+      --card: #2d2d2d;
+      --text: #ecf0f1;
+      --accent: #f1c40f;
+      --light: #333;
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      padding: 1rem;
+      transition: 0.3s;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, var(--gold), #e6b800);
+      color: white;
+      border-radius: 16px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    }
+    h1 { font-size: 1.6rem; margin-bottom: 0.3rem; }
+    .subtitle { font-size: 0.95rem; opacity: 0.9; }
+
+    .tabs {
+      display: flex;
+      background: var(--card);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .tab {
+      flex: 1;
+      padding: 1rem;
+      text-align: center;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+      font-size: 0.85rem;
+    }
+    .tab.active {
+      background: var(--accent);
+      color: white;
+    }
+    .tab:hover:not(.active) { background: #eee; }
+    .dark .tab:hover:not(.active) { background: #444; }
+
+    .mode-content {
+      display: none;
+      background: var(--card);
+      padding: 1.5rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .mode-content.active { display: block; }
+
+    .timer { text-align: center; margin-bottom: 1rem; }
+    #time, #unmodTime { font-size: 3.8rem; font-weight: bold; color: var(--accent); }
+
+    .controls {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin: 1rem 0;
+    }
+    button {
+      padding: 0.8rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-start { background: var(--success); color: white; }
+    .btn-pause { background: var(--warning); color: white; }
+    .btn-reset { background: var(--danger); color: white; }
+    .btn-next { background: var(--accent); color: white; flex: 1; margin-top: 0.5rem; }
+
+    .speaker {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+      border-bottom: 1px solid #eee;
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+    .dark .speaker { border-color: #444; }
+    .spoken { opacity: 0.6; text-decoration: line-through; }
+    .current { background: rgba(201, 162, 39, 0.15); border-left: 5px solid var(--accent); font-weight: bold; }
+
+    .config {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .config input {
+      padding: 0.7rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      flex: 1;
+      min-width: 100px;
+    }
+
+    .delegation {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem;
+      background: var(--light);
+      border-radius: 10px;
+      margin-bottom: 0.6rem;
+      border-left: 4px solid #ddd;
+    }
+    .dark .delegation { background: #333; border-left-color: #555; }
+    .delegation.present { border-left-color: var(--success); background: #d5f5e3; }
+    .dark .delegation.present { background: #1e4d2b; }
+    .delegation.absent { border-left-color: var(--danger); background: #fadbd8; }
+    .dark .delegation.absent { background: #4a1c1c; }
+    .delegation-name { font-weight: 600; flex: 1; }
+    .delegation-flag { font-size: 1.3rem; margin-right: 0.5rem; }
+    .btn-presence { padding: 0.4rem 0.8rem; font-size: 0.8rem; border-radius: 6px; }
+    .btn-present { background: var(--success); color: white; }
+    .btn-absent { background: var(--danger); color: white; }
+
+    .vote-card {
+      background: var(--light);
+      padding: 1rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .vote-input {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+    .vote-btns {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin: 1rem 0;
+    }
+    .vote-btn {
+      flex: 1;
+      padding: 1rem;
+      font-size: 1.5rem;
+      border-radius: 12px;
+      font-weight: bold;
+    }
+    .vote-yes { background: #27ae60; color: white; }
+    .vote-no { background: #e74c3c; color: white; }
+    .vote-abs { background: #95a5a6; color: white; }
+
+    .result {
+      padding: 1rem;
+      border-radius: 12px;
+      margin-top: 1rem;
+      font-weight: bold;
+      text-align: center;
+      font-size: 1.1rem;
+      display: none;
+    }
+    .result.approved { background: #d5f5e3; color: #27ae60; }
+    .result.rejected { background: #fadbd8; color: #e74c3c; }
+
+    .history {
+      margin-top: 1.5rem;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .history-item {
+      background: var(--light);
+      padding: 0.8rem;
+      border-radius: 8px;
+      margin-bottom: 0.6rem;
+      font-size: 0.9rem;
+    }
+    .dark .history-item { background: #333; }
+
+    .footer {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      color: #7f8c8d;
+    }
+    .theme-toggle {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: var(--card);
+      border: 1px solid #ddd;
+      padding: 0.5rem;
+      border-radius: 50%;
+      cursor: pointer;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+    .dark .theme-toggle { border-color: #555; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="theme-toggle" id="themeToggle">Dark Mode</div>
+
+    <header>
+      <h1>SMUN – CONFERÊNCIA DE BERLIM</h1>
+      <p class="subtitle">Comitê Histórico da ONU</p>
+      <p class="subtitle">Tema: Partilha da África</p>
+    </header>
+
+    <div class="tabs">
+      <div class="tab active" data-mode="moderated">Mod.</div>
+      <div class="tab" data-mode="unmoderated">Unmod.</div>
+      <div class="tab" data-mode="presenca">Presença</div>
+      <div class="tab" data-mode="votacao">Votação</div>
+      <div class="tab" data-mode="info">Info</div>
+    </div>
+
+    <!-- MODERATED -->
+    <div id="moderated" class="mode-content active">
+      <div class="config">
+        <input type="number" id="modTime" value="60" min="30" max="300" />
+        <span style="align-self:center; padding:0 0.5rem;">seg/fala</span>
+      </div>
+      <div class="timer">
+        <div id="time">01:00</div>
+        <div class="controls">
+          <button class="btn-start" id="startBtn">Iniciar</button>
+          <button class="btn-pause" id="pauseBtn" style="display:none">Pausar</button>
+          <button class="btn-reset" id="resetBtn">Zerar</button>
+        </div>
+        <button class="btn-next" id="nextBtn">Próximo Orador</button>
+      </div>
+      <div class="speaker-list">
+        <h3>Lista de Oradores</h3>
+        <div id="speakers"></div>
+        <div style="margin-top:1rem">
+          <input type="text" id="newSpeaker" placeholder="Adicionar orador" style="width:100%; padding:0.7rem; border-radius:8px; border:1px solid #ddd; margin-bottom:0.5rem"/>
+          <button class="btn-next" style="width:100%" id="addBtn">+ Adicionar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- UNMODERATED -->
+    <div id="unmoderated" class="mode-content">
+      <div class="config">
+        <input type="number" id="unmodMinutes" value="10" min="1" max="60" />
+        <span style="align-self:center; padding:0 0.5rem;">min</span>
+      </div>
+      <div class="timer">
+        <div id="unmodTime">10:00</div>
+        <div class="controls">
+          <button class="btn-start" id="unmodStart">Iniciar</button>
+          <button class="btn-pause" id="unmodPause" style="display:none">Pausar</button>
+          <button class="btn-reset" id="unmodReset">Encerrar</button>
+        </div>
+      </div>
+      <p style="text-align:center; font-style:italic; color:#7f8c8d;">Fala livre • Tempo total</p>
+    </div>
+
+    <!-- PRESENÇA -->
+    <div id="presenca" class="mode-content">
+      <h3>Lista de Chamada</h3>
+      <div id="attendanceList"></div>
+      <div style="text-align:center; margin-top:1rem;">
+        <button class="btn-next" onclick="exportPresence()">Exportar TXT</button>
+      </div>
+    </div>
+
+    <!-- VOTAÇÃO -->
+    <div id="votacao" class="mode-content">
+      <div class="vote-card">
+        <input type="text" class="vote-input" id="voteTitle" placeholder="Título da proposta" />
+        <div class="vote-btns">
+          <button class="vote-btn vote-yes" id="voteYes">SIM</button>
+          <button class="vote-btn vote-no" id="voteNo">NÃO</button>
+          <button class="vote-btn vote-abs" id="voteAbs">ABST.</button>
+        </div>
+        <button class="btn-next" style="width:100%; margin-top:1rem;" id="finalizeVote">Finalizar Votação</button>
+      </div>
+      <div id="voteResult" class="result"></div>
+
+      <div class="history">
+        <h3>Histórico</h3>
+        <div id="voteHistory"></div>
+      </div>
+    </div>
+
+    <!-- INFO -->
+    <div id="info" class="mode-content">
+      <div style="background:var(--light); padding:1rem; border-radius:12px; margin-bottom:1rem;">
+        <strong>Data:</strong> 13/11/2025<br>
+        <strong>Horário:</strong> 19h00<br>
+        <strong>Local:</strong> Instituto SMUN
+      </div>
+    </div>
+
+    <div class="footer">SMUN v4.0 • 100% FUNCIONAL</div>
+  </div>
+
+  <script>
+    // === DELEGAÇÕES (30) ===
+    const delegations = [
+      { country: "Reino Unido", flag: "GB", delegate: "Aílton do Nascimento", status: "" },
+      { country: "França", flag: "FR", delegate: "Israel Barduco Neto", status: "" },
+      { country: "Alemanha", flag: "DE", delegate: "Eliseu Quinanga", status: "" },
+      { country: "Portugal", flag: "PT", delegate: "Jonathan Ashford", status: "" },
+      { country: "Bélgica", flag: "BE", delegate: "Íris Correia", status: "" },
+      { country: "Espanha", flag: "ES", delegate: "Mariana Costa Domingos", status: "" },
+      { country: "Itália", flag: "IT", delegate: "Stephany Pereira do N. Santos", status: "" },
+      { country: "Países Baixos", flag: "NL", delegate: "Ana Maria Brasileiro Lima", status: "" },
+      { country: "Império Otomano", flag: "TR", delegate: "Victor Gabriel/VIKITIN", status: "" },
+      { country: "Egito", flag: "EG", delegate: "Iqra Juma", status: "" },
+      { country: "Império da Abissínia", flag: "ET", delegate: "Yussel Morena Antônio Ferreira", status: "" },
+      { country: "Reino do Kongo", flag: "CD", delegate: "Letícia Oliveira", status: "" },
+      { country: "Reino Zulu", flag: "ZA", delegate: "Plinio Rikelmi", status: "" },
+      { country: "Núbia / Reino de Funj", flag: "SD", delegate: "", status: "" },
+      { country: "Libéria", flag: "LR", delegate: "Sabrina Carvalho", status: "" },
+      { country: "Império de Mutapa", flag: "ZW", delegate: "", status: "" },
+      { country: "Regência de Argel", flag: "DZ", delegate: "", status: "" },
+      { country: "Regência de Tunes", flag: "TN", delegate: "", status: "" },
+      { country: "Reino do Ndongo e Matamba", flag: "AO", delegate: "Pedro Tchipa", status: "" },
+      { country: "Reino de Gaza", flag: "MZ", delegate: "", status: "" },
+      { country: "Império do Mali", flag: "GN", delegate: "Ibrahimi Keita", status: "" },
+      { country: "Império de Sokoto", flag: "NG", delegate: "Davi Duarte", status: "" },
+      { country: "Império de Ashanti", flag: "GH", delegate: "Vitória Casaes", status: "" },
+      { country: "Império do Jolof", flag: "SN", delegate: "", status: "" },
+      { country: "Reino de Cabo Verde", flag: "CV", delegate: "Maria Luiza Alves Macêdo Figueiredo Lima", status: "" },
+      { country: "Império de Bornu", flag: "TD", delegate: "", status: "" },
+      { country: "Sultanato de Mombaça", flag: "KE", delegate: "", status: "" },
+      { country: "Reino de Shilluk", flag: "SS", delegate: "", status: "" },
+      { country: "Sultanato de Zanzibar", flag: "TZ", delegate: "", status: "" },
+      { country: "Sultanato de Marrocos", flag: "MA", delegate: "Ana Carolina", status: "" }
+    ];
+
+    // === ESTADO ===
+    let attendance = JSON.parse(localStorage.getItem('smun_attendance')) || delegations.map(d => ({...d}));
+    let speakers = JSON.parse(localStorage.getItem('smun_speakers')) || [];
+    let voteHistory = JSON.parse(localStorage.getItem('smun_votes')) || [];
+    let currentVote = { yes: 0, no: 0, abs: 0, title: "" };
+    let modTimer, unmodTimer, modSeconds = 60, unmodSeconds = 600, modRunning = false, unmodRunning = false, modIndex = -1;
+
+    // === ELEMENTOS ===
+    const tabs = document.querySelectorAll('.tab');
+    const modes = document.querySelectorAll('.mode-content');
+    let currentMode = 'moderated';
+
+    // === TEMA ===
+    document.getElementById('themeToggle').onclick = () => {
+      document.body.classList.toggle('dark');
+      document.getElementById('themeToggle').textContent = document.body.classList.contains('dark') ? 'Light Mode' : 'Dark Mode';
+    };
+
+    // === TROCAR ABA ===
+    tabs.forEach(tab => {
+      tab.onclick = () => {
+        const mode = tab.dataset.mode;
+        if (mode === currentMode) return;
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        modes.forEach(m => m.classList.remove('active'));
+        document.getElementById(mode).classList.add('active');
+        currentMode = mode;
+        if (mode === 'presenca') renderAttendance();
+        if (mode === 'votacao') renderVoteHistory();
+      };
+    });
+
+    // === MODERATED ===
+    const updateModTimer = () => {
+      const m = String(Math.floor(modSeconds / 60)).padStart(2, '0');
+      const s = String(modSeconds % 60).padStart(2, '0');
+      document.getElementById('time').textContent = `${m}:${s}`;
+      document.getElementById('time').style.color = modSeconds <= 10 ? 'var(--danger)' : 'var(--accent)';
+    };
+
+    document.getElementById('modTime').onchange = () => {
+      modSeconds = parseInt(document.getElementById('modTime').value) || 60;
+      updateModTimer();
+    };
+
+    document.getElementById('startBtn').onclick = () => {
+      if (speakers.length === 0 || modIndex === -1) return alert('Adicione um orador!');
+      if (modRunning) return;
+      modRunning = true;
+      document.getElementById('startBtn').style.display = 'none';
+      document.getElementById('pauseBtn').style.display = 'block';
+      modTimer = setInterval(() => {
+        modSeconds--;
+        updateModTimer();
+        if (modSeconds <= 0) endSpeech();
+      }, 1000);
+    };
+
+    document.getElementById('pauseBtn').onclick = () => {
+      clearInterval(modTimer);
+      modRunning = false;
+      document.getElementById('startBtn').style.display = 'block';
+      document.getElementById('pauseBtn').style.display = 'none';
+    };
+
+    document.getElementById('resetBtn').onclick = () => {
+      clearInterval(modTimer);
+      modRunning = false;
+      modSeconds = parseInt(document.getElementById('modTime').value) || 60;
+      updateModTimer();
+      document.getElementById('startBtn').style.display = 'block';
+      document.getElementById('pauseBtn').style.display = 'none';
+    };
+
+    document.getElementById('nextBtn').onclick = () => {
+      if (speakers.length === 0) return;
+      if (modIndex >= 0) speakers[modIndex].spoken = true;
+      modIndex = (modIndex + 1) % speakers.length;
+      while (speakers[modIndex].spoken && speakers.some(s => !s.spoken)) {
+        modIndex = (modIndex + 1) % speakers.length;
+      }
+      renderSpeakers();
+      modSeconds = parseInt(document.getElementById('modTime').value) || 60;
+      updateModTimer();
+    };
+
+    function endSpeech() {
+      clearInterval(modTimer);
+      modRunning = false;
+      document.getElementById('startBtn').style.display = 'block';
+      document.getElementById('pauseBtn').style.display = 'none';
+      beep();
+      setTimeout(() => {
+        if (confirm('Tempo esgotado! Próximo?')) document.getElementById('nextBtn').click();
+      }, 500);
+    }
+
+    document.getElementById('addBtn').onclick = () => {
+      const name = document.getElementById('newSpeaker').value.trim();
+      if (name) {
+        speakers.push({ name, spoken: false });
+        document.getElementById('newSpeaker').value = '';
+        if (modIndex === -1) modIndex = 0;
+        renderSpeakers();
+        localStorage.setItem('smun_speakers', JSON.stringify(speakers));
+      }
+    };
+
+    document.getElementById('newSpeaker').onkeypress = e => e.key === 'Enter' && document.getElementById('addBtn').click();
+
+    const renderSpeakers = () => {
+      const div = document.getElementById('speakers');
+      div.innerHTML = '';
+      speakers.forEach((s, i) => {
+        const el = document.createElement('div');
+        el.className = 'speaker';
+        if (s.spoken) el.classList.add('spoken');
+        if (i === modIndex) el.classList.add('current');
+        el.innerHTML = `<span>${s.name}</span><button onclick="removeSpeaker(${i})" style="background:none;border:none;cursor:pointer;">Remove</button>`;
+        div.appendChild(el);
+      });
+    };
+
+    window.removeSpeaker = i => {
+      speakers.splice(i, 1);
+      if (modIndex >= speakers.length) modIndex = speakers.length - 1;
+      if (modIndex === -1 && speakers.length > 0) modIndex = 0;
+      renderSpeakers();
+      localStorage.setItem('smun_speakers', JSON.stringify(speakers));
+    };
+
+    // === UNMODERATED ===
+    const updateUnmodTimer = () => {
+      const m = String(Math.floor(unmodSeconds / 60)).padStart(2, '0');
+      const s = String(unmodSeconds % 60).padStart(2, '0');
+      document.getElementById('unmodTime').textContent = `${m}:${s}`;
+    };
+
+    document.getElementById('unmodMinutes').onchange = () => {
+      unmodSeconds = (parseInt(document.getElementById('unmodMinutes').value) || 10) * 60;
+      updateUnmodTimer();
+    };
+
+    document.getElementById('unmodStart').onclick = () => {
+      if (unmodRunning) return;
+      unmodRunning = true;
+      document.getElementById('unmodStart').style.display = 'none';
+      document.getElementById('unmodPause').style.display = 'block';
+      unmodTimer = setInterval(() => {
+        unmodSeconds--;
+        updateUnmodTimer();
+        if (unmodSeconds <= 0) {
+          clearInterval(unmodTimer);
+          unmodRunning = false;
+          document.getElementById('unmodStart').style.display = 'block';
+          document.getElementById('unmodPause').style.display = 'none';
+          beep();
+          alert('Caucus encerrado!');
+        }
+      }, 1000);
+    };
+
+    document.getElementById('unmodPause').onclick = () => {
+      clearInterval(unmodTimer);
+      unmodRunning = false;
+      document.getElementById('unmodStart').style.display = 'block';
+      document.getElementById('unmodPause').style.display = 'none';
+    };
+
+    document.getElementById('unmodReset').onclick = () => {
+      clearInterval(unmodTimer);
+      unmodRunning = false;
+      unmodSeconds = (parseInt(document.getElementById('unmodMinutes').value) || 10) * 60;
+      updateUnmodTimer();
+      document.getElementById('unmodStart').style.display = 'block';
+      document.getElementById('unmodPause').style.display = 'none';
+    };
+
+    // === PRESENÇA ===
+    const renderAttendance = () => {
+      const list = document.getElementById('attendanceList');
+      list.innerHTML = '';
+      attendance.forEach((d, i) => {
+        const div = document.createElement('div');
+        div.className = `delegation ${d.status}`;
+        div.innerHTML = `
+          <div>
+            <span class="delegation-flag">${d.flag}</span>
+            <span class="delegation-name">${d.country}</span>
+            ${d.delegate ? `<br><small>${d.delegate}</small>` : ''}
+          </div>
+          <div>
+            <button class="btn-presence btn-present" onclick="setPresence(${i}, 'present')">P</button>
+            <button class="btn-presence btn-absent" onclick="setPresence(${i}, 'absent')">F</button>
+          </div>
+        `;
+        list.appendChild(div);
+      });
+    };
+
+    window.setPresence = (i, status) => {
+      attendance[i].status = status;
+      localStorage.setItem('smun_attendance', JSON.stringify(attendance));
+      renderAttendance();
+    };
+
+    window.exportPresence = () => {
+      let txt = "PRESENÇA SMUN BERLIM\n\n";
+      attendance.forEach(d => {
+        const status = d.status === 'present' ? 'PRESENTE' : d.status === 'absent' ? 'FALTA' : 'N/D';
+        txt += `${d.flag} ${d.country} → ${status}\n`;
+      });
+      const blob = new Blob([txt], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'presenca_smun.txt';
+      a.click();
+    };
+
+    // === VOTAÇÃO ===
+    document.getElementById('voteYes').onclick = () => currentVote.yes++;
+    document.getElementById('voteNo').onclick = () => currentVote.no++;
+    document.getElementById('voteAbs').onclick = () => currentVote.abs++;
+
+    document.getElementById('finalizeVote').onclick = () => {
+      const title = document.getElementById('voteTitle').value.trim() || "Proposta";
+      if (currentVote.yes + currentVote.no + currentVote.abs === 0) return alert("Nenhum voto!");
+
+      const present = attendance.filter(d => d.status === 'present').length;
+      const simple = Math.floor(present / 2) + 1;
+      const qualified = Math.ceil((2 * present) / 3);
+
+      const result = {
+        title, yes: currentVote.yes, no: currentVote.no, abs: currentVote.abs,
+        present, simple, qualified,
+        passed: currentVote.yes >= qualified ? 'qualified' : currentVote.yes >= simple ? 'simple' : 'rejected',
+        time: new Date().toLocaleString('pt-BR')
+      };
+
+      voteHistory.push(result);
+      localStorage.setItem('smun_votes', JSON.stringify(voteHistory));
+
+      const el = document.getElementById('voteResult');
+      el.innerHTML = `<strong>${title}</strong><br>
+        SIM: ${result.yes} | NÃO: ${result.no} | ABS: ${result.abs}<br>
+        Presentes: ${present}<br>
+        <strong>Simples:</strong> ${simple} | <strong>Qualificada:</strong> ${qualified}<br><br>
+        <strong style="color:${result.passed === 'rejected' ? '#e74c3c' : '#27ae60'}">
+          ${result.passed === 'qualified' ? 'APROVADA POR QUALIFICADA' : result.passed === 'simple' ? 'APROVADA POR SIMPLES' : 'REJEITADA'}
+        </strong>`;
+      el.className = result.passed === 'rejected' ? 'result rejected' : 'result approved';
+      el.style.display = 'block';
+
+      currentVote = { yes: 0, no: 0, abs: 0, title: "" };
+      document.getElementById('voteTitle').value = '';
+      renderVoteHistory();
+    };
+
+    const renderVoteHistory = () => {
+      const hist = document.getElementById('voteHistory');
+      hist.innerHTML = '';
+      voteHistory.slice(-5).reverse().forEach(v => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `<strong>${v.title}</strong><br>
+          ${v.yes} SIM | ${v.no} NÃO | ${v.abs} ABS<br>
+          <small>${v.passed === 'qualified' ? 'Qualificada' : v.passed === 'simple' ? 'Simples' : 'Rejeitada'} • ${v.time}</small>`;
+        hist.appendChild(div);
+      });
+    };
+
+    // === SOM ===
+    const beep = () => {
+      const ctx = new AudioContext();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g);
+      g.connect(ctx.destination);
+      o.frequency.value = 800;
+      g.gain.setValueAtTime(0.3, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+      o.start();
+      o.stop(ctx.currentTime + 0.5);
+    };
+
+    // === INICIAR ===
+    updateModTimer();
+    updateUnmodTimer();
+    renderSpeakers();
+    renderAttendance();
+    renderVoteHistory();
+  </script>
+</body>
+</html>
